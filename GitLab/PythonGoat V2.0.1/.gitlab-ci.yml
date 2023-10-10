@@ -1,0 +1,78 @@
+# To contribute improvements to CI/CD templates, please follow the Development guide at:
+# https://docs.gitlab.com/ee/development/cicd/templates.html
+# This specific template is located at:
+# https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Python.gitlab-ci.yml
+
+# Official language image. Look for the different tagged releases at:
+# https://hub.docker.com/r/library/python/tags/
+#include:
+#  - local: '/fortify-sast-fod.yml'
+image: python:3.8.18
+
+stages:
+  - build
+  - test
+
+# Change pip's cache directory to be inside the project directory since we can
+# only cache local items.
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+# Pip's cache doesn't store the python packages
+# https://pip.pypa.io/en/stable/topics/caching/
+#
+# If you want to also cache the installed packages, you have to install
+# them in a virtualenv and cache it as well.
+cache:
+  paths:
+    - .cache/pip
+
+build:
+  stage: build
+  script:
+    - python -m pip install --upgrade pip
+    - pip install pipenv
+    - pip install -r requirements.txt
+    - pipenv install -r requirements.txt
+
+fortify-sast:
+  stage: test
+  variables:
+    PACKAGE_OPTS: "-bt none -oss"
+    FOD_URL: "https://ams.fortify.com"
+    FOD_API_URL: "https://api.ams.fortify.com/"
+    FOD_UPLOADER_OPTS: "-ep 2 -pp 0 -I 1 -apf"
+    FOD_NOTES: "Triggered by Gitlab Pipeline IID $CI_PIPELINE_IID: $CI_PIPELINE_URL"
+  script:
+    # Installing Java 17
+    - apt update
+    - apt install default-jdk -y
+    - java -version
+    # Generating files used for OpenSource Scan via FoD
+    - python -m pip install --upgrade pip
+    - pip install pipenv
+    - pip install -r requirements.txt
+    - pipenv install -r requirements.txt
+    # Downloading FCLI
+    - wget https://github.com/fortify/fcli/releases/latest/download/fcli.jar
+    # Installing SC Client via FCLI
+    - java -jar fcli.jar tool sc-client install 23.1.0
+    # Packaging using SC Client
+    - $HOME/.fortify/tools/sc-client/23.1.0/bin/scancentral package $PACKAGE_OPTS -o package.zip
+    # Installing FodUploader Tool
+    - java -jar fcli.jar tool fod-uploader install latest
+    # Uploading package to FoD
+    - $HOME/.fortify/tools/fod-uploader/latest/bin/FoDUpload -z package.zip -aurl $FOD_API_URL -purl $FOD_URL -rid "$FOD_RELEASE" -tc "$FOD_TENANT" -uc "$FOD_USERNAME" "$FOD_PAT" $FOD_UPLOADER_OPTS -n "$FOD_NOTES"
+    # insalling FortifyVulnerabilityExporter
+    - java -jar fcli.jar tool vuln-exporter install latest
+    # Downloading Vulnerabilities from FoD
+    - $HOME/.fortify/tools/vuln-exporter/latest/bin/FortifyVulnerabilityExporter  FoDToGitLabSAST --fod.baseUrl=$FOD_URL --fod.tenant="$FOD_TENANT" --fod.userName="$FOD_USERNAME" --fod.password="$FOD_PAT" --fod.release.id=$FOD_RELEASE
+
+  allow_failure: true
+  # Report SAST vulnerabilities back to GitLab
+  artifacts:
+    reports:
+      sast: gl-fortify-sast.json
+    expire_in: 3 days
+    when: always
+    
