@@ -13,7 +13,7 @@
 ################################################################################################################################################
 
 fortify-sast-fod-with-report:
-  image: fortifydocker/fortify-ci-tools:4-jdk-11
+  image: fortifydocker/fortify-ci-tools:latest-jdk-11
   variables:
     # Update/override PACKAGE_OPTS based on the ScanCentral Client documentation for your project's included tech stack(s). Helpful hints:
     #   ScanCentral Client will download dependencies for maven (-bt mvn) and gradle (-bt gradle).
@@ -30,7 +30,7 @@ fortify-sast-fod-with-report:
     #   FOD_UPLOADER_OPTS can be adjusted to wait for scan completion/pull results (-I 1) and control whether to fail the job (-apf).
     FOD_URL: "https://ams.fortify.com"
     FOD_API_URL: "https://api.ams.fortify.com/"
-    FOD_UPLOADER_OPTS: "-ep 2 -pp 0"
+    FOD_UPLOADER_OPTS: "-ep 2 -pp 0 -apf"
     FOD_NOTES: "Triggered by Gitlab Pipeline IID $CI_PIPELINE_IID: $CI_PIPELINE_URL"
 
   script:
