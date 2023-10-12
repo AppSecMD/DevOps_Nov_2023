@@ -37,7 +37,7 @@ fortify-sast-fod-with-report:
     # Package source code and dependencies using Fortify ScanCentral client
     - 'scancentral package $PACKAGE_OPTS -o package.zip'
     # Start Fortify on Demand SAST scan
-    - 'FoDUpload -z package.zip -aurl $FOD_API_URL -purl $FOD_URL -rid "$FOD_RELEASE" -tc "$FOD_TENANT" -uc "$FOD_USERNAME" "$FOD_PAT" $FOD_UPLOADER_OPTS -I 1 -n "$FOD_NOTES"  -apf'
+    - 'FoDUpload -z package.zip -aurl $FOD_API_URL -purl $FOD_URL -rid "$FOD_RELEASE" -tc "$FOD_TENANT" -uc "$FOD_USERNAME" "$FOD_PAT" $FOD_UPLOADER_OPTS -I 1 -n "$FOD_NOTES"'
     # Generate GitLab reports
     - 'FortifyVulnerabilityExporter FoDToGitLabSAST --fod.baseUrl=$FOD_URL --fod.tenant="$FOD_TENANT" --fod.userName="$FOD_USERNAME" --fod.password="$FOD_PAT" --fod.release.id=$FOD_RELEASE' 
   # Change to false to fail the entire pipeline if the scan fails and/or the result of a scan causes security policy failure (see "-apf" option in FoDUploader documentation)
