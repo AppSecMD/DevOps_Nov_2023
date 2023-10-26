@@ -54,7 +54,8 @@ fortify-sast:
     - pip install -r requirements.txt
     - pipenv install -r requirements.txt
     # Downloading FCLI
-    - wget https://github.com/fortify/fcli/releases/latest/download/fcli.jar
+    # - wget https://github.com/fortify/fcli/releases/latest/download/fcli.jar
+    - wget https://github.com/fortify/fcli/releases/download/v1.3.2/fcli.jar
     # Installing SC Client via FCLI
     - java -jar fcli.jar tool sc-client install 23.1.0
     # Packaging using SC Client
