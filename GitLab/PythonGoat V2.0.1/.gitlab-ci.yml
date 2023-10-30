@@ -54,20 +54,20 @@ fortify-sast:
     - pip install -r requirements.txt
     - pipenv install -r requirements.txt
     # Downloading FCLI
-    # - wget https://github.com/fortify/fcli/releases/latest/download/fcli.jar
-    - wget https://github.com/fortify/fcli/releases/download/v1.3.2/fcli.jar
+    - wget https://github.com/fortify/fcli/releases/latest/download/fcli.jar
+    # Commands updated to use FCLI v2.0.0
     # Installing SC Client via FCLI
-    - java -jar fcli.jar tool sc-client install 23.1.0
+    - java -jar fcli.jar tool sc-client install -v 23.1.0
     # Packaging using SC Client
     - $HOME/.fortify/tools/sc-client/23.1.0/bin/scancentral package $PACKAGE_OPTS -o package.zip
     # Installing FodUploader Tool
-    - java -jar fcli.jar tool fod-uploader install latest
+    - java -jar fcli.jar tool fod-uploader install -v 5.4.0
     # Uploading package to FoD
-    - $HOME/.fortify/tools/fod-uploader/latest/bin/FoDUpload -z package.zip -aurl $FOD_API_URL -purl $FOD_URL -rid "$FOD_RELEASE" -tc "$FOD_TENANT" -uc "$FOD_USERNAME" "$FOD_PAT" $FOD_UPLOADER_OPTS -n "$FOD_NOTES"
+    - $HOME/.fortify/tools/fod-uploader/5.4.0/bin/FoDUpload -z package.zip -aurl $FOD_API_URL -purl $FOD_URL -rid "$FOD_RELEASE" -tc "$FOD_TENANT" -uc "$FOD_USERNAME" "$FOD_PAT" $FOD_UPLOADER_OPTS -n "$FOD_NOTES"
     # insalling FortifyVulnerabilityExporter
-    - java -jar fcli.jar tool vuln-exporter install latest
+    - java -jar fcli.jar tool vuln-exporter install -v 2.0.4
     # Downloading Vulnerabilities from FoD
-    - $HOME/.fortify/tools/vuln-exporter/latest/bin/FortifyVulnerabilityExporter  FoDToGitLabSAST --fod.baseUrl=$FOD_URL --fod.tenant="$FOD_TENANT" --fod.userName="$FOD_USERNAME" --fod.password="$FOD_PAT" --fod.release.id=$FOD_RELEASE
+    - $HOME/.fortify/tools/vuln-exporter/2.0.4/bin/FortifyVulnerabilityExporter  FoDToGitLabSAST --fod.baseUrl=$FOD_URL --fod.tenant="$FOD_TENANT" --fod.userName="$FOD_USERNAME" --fod.password="$FOD_PAT" --fod.release.id=$FOD_RELEASE
 
   allow_failure: true
   # Report SAST vulnerabilities back to GitLab
