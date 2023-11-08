@@ -1,0 +1,59 @@
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: .NET on Windows with FoD SAST
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    # runs-on: ubuntu-latest
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: |
+          3.1.x
+          6.0.x
+          7.0.x
+          
+    - name: Setup MSBuild
+      uses: microsoft/setup-msbuild@v1
+      with:
+        vs-version: 10.0
+        
+    - name: Restore dependencies
+      run: |
+        dotnet tool install --global dotnet-ef
+        dotnet restore IWA.NET.sln --locked-mode
+        dotnet tool restore
+      
+    - name: Build
+      run: dotnet msbuild IWA.NET.sln /p:Confugration=Debug /t:Clean,Build
+      
+    #- name: Test
+    #  run: dotnet test --no-build --verbosity normal
+
+    - name: Run FoD SAST Scan
+      uses: fortify/github-action@v1
+      with:
+        sast-scan: true
+      env:
+        FOD_URL: https://ams.fortify.com
+        FOD_TENANT: ${{secrets.FOD_TENANT}}
+        FOD_USER: ${{secrets.FOD_USER}}
+        FOD_PASSWORD: ${{secrets.FOD_PAT}}
+        # EXTRA_FOD_LOGIN_OPTS: --socket-timeout=60s
+        # FOD_RELEASE: MyApp:MyRelease
+        FOD_RELEASE: your_email_address:IWA-DotNET-v1.1
+        EXTRA_PACKAGE_OPTS: -oss
+        DO_WAIT: true
+        DO_EXPORT: true
